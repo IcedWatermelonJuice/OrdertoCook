@@ -75,7 +75,9 @@ public final class ModClientNetworking {
         PacketByteBuf out = new PacketByteBuf(Unpooled.buffer());
         out.writeString(customerName, 64);
         out.writeBoolean(deliveryRequested != null);
-        out.writeBoolean(Boolean.TRUE.equals(deliveryRequested));
+        if (deliveryRequested != null) {
+            out.writeBoolean(deliveryRequested);
+        }
         out.writeVarInt(menuIndex);
         ClientPlayNetworking.send(id, out);
     }

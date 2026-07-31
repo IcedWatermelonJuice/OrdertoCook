@@ -91,7 +91,7 @@ public final class ChatOrderClientApi {
                     "[ChatOrder] 捕获到关键信息：source={}, 内容=\"{}\"，顾客名=\"{}\"，用户发言=\"{}\"",
                     normalizedSource, rawMessage, customerName.isEmpty() ? "<random>" : customerName, content);
             Boolean deliveryRequested;
-            if (rawMessage.contains(DINE_IN_KEYWORD)) {
+            if (content.contains(DINE_IN_KEYWORD)) {
                 deliveryRequested = Boolean.FALSE;
             } else {
                 deliveryRequested = DELIVERY_KEYWORDS.matcher(content).find() ? Boolean.TRUE : null;

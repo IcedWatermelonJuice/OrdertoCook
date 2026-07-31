@@ -204,7 +204,9 @@ public final class ModNetworking {
                 (msg, buf) -> {
                     buf.writeUtf(msg.customerName(), 64);
                     buf.writeBoolean(msg.deliveryRequested() != null);
-                    buf.writeBoolean(Boolean.TRUE.equals(msg.deliveryRequested()));
+                    if (msg.deliveryRequested() != null) {
+                        buf.writeBoolean(msg.deliveryRequested());
+                    }
                     buf.writeVarInt(msg.menuIndex());
                 },
                 buf -> new ChatOrderC2SPayload(buf.readUtf(64), buf.readBoolean() ? buf.readBoolean() : null, buf.readVarInt()),

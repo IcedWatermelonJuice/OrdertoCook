@@ -229,7 +229,9 @@ public final class ModNetworking {
                 StreamCodec.ofMember((payload, buf) -> {
                             buf.writeUtf(payload.customerName(), 64);
                             buf.writeBoolean(payload.deliveryRequested() != null);
-                            buf.writeBoolean(Boolean.TRUE.equals(payload.deliveryRequested()));
+                            if (payload.deliveryRequested() != null) {
+                                buf.writeBoolean(payload.deliveryRequested());
+                            }
                             buf.writeVarInt(payload.menuIndex());
                         },
                         buf -> new ChatOrderC2SPayload(buf.readUtf(64), buf.readBoolean() ? buf.readBoolean() : null, buf.readVarInt()));
