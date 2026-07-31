@@ -46,6 +46,8 @@ OrderToCook 是一个 Minecraft 餐厅经营模组。放置打单机开始营业
 "chatOrderEnabled": true
 ```
 
+也可以在游戏内直接用 `/chatorder enable` / `/chatorder disable` 指令开关该功能（会自动同步修改配置文件）。
+
 开始营业前，请确认已经放置并激活打单机，并通过菜单板设置好餐厅菜单。
 
 ### 观众如何点单
@@ -79,14 +81,14 @@ OrderToCook 是一个 Minecraft 餐厅经营模组。放置打单机开始营业
 可以使用下面的客户端指令模拟一条弹幕：
 
 ```text
-/ordertocook danmuku [消息] 测试观众：我来下单了 套餐A 外卖
+/chatorder danmaku [消息] 测试观众：我来下单了 套餐A 外卖
 ```
 
 也可以测试通用格式：
 
 ```text
-/ordertocook danmuku 我来下单了-测试观众-套餐A
-/ordertocook danmuku 我来下单了-随机订单
+/chatorder danmaku 我来下单了-测试观众-套餐A
+/chatorder danmaku 我来下单了-随机订单
 ```
 
 ### 自定义其他弹幕模组
