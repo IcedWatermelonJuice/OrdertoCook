@@ -5,6 +5,7 @@ import cn.breezeth.ordertocook.block.entity.OrderMachineBlockEntity;
 import cn.breezeth.ordertocook.config.ConfigManager;
 import cn.breezeth.ordertocook.core.OrderGenerator;
 import cn.breezeth.ordertocook.core.RestaurantRegistry;
+import cn.breezeth.ordertocook.registry.ModSounds;
 import cn.breezeth.ordertocook.util.DataCompat;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -12,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.List;
@@ -71,6 +73,9 @@ public final class ChatOrderServerHandler {
                 deliveryRequested ? Boolean.TRUE : null);
         markAsChatOrder(order);
         int targetSlot = insertOrder(world, machine, order);
+        if (targetSlot >= 0) {
+            world.playSound(null, machinePos, ModSounds.ORDER_REFRESH, SoundCategory.BLOCKS, 1.0f, 1.0f);
+        }
         if (devMode) {
             if (targetSlot >= 0) OrderToCookMod.LOGGER.info(
                     "[ChatOrder/Dev] 订单写入完成：machinePos={}, targetSlot={}", machinePos.toShortString(), targetSlot);

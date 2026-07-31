@@ -42,11 +42,16 @@ public final class ChatOrderClientApi {
         String normalizedSource = sourceId == null || sourceId.isBlank() ? "external_api" : sourceId;
         if (devMode) OrderToCookMod.LOGGER.info(
                 "[ChatOrder/Dev] 客户端收到候选消息：source={}, rawMessage=\"{}\"", normalizedSource, rawMessage);
+        if (devMode) logMessageDiagnostics(normalizedSource, rawMessage);
         ensureInitialized();
         for (int ruleIndex = 0; ruleIndex < messagePatterns.size(); ruleIndex++) {
             Pattern pattern = messagePatterns.get(ruleIndex);
             Matcher matcher = pattern.matcher(rawMessage);
-            if (!matcher.matches()) continue;
+            boolean matched = matcher.matches();
+            if (devMode) OrderToCookMod.LOGGER.info(
+                    "[ChatOrder/Dev] 正则检测：source={}, ruleIndex={}, matched={}, pattern=\"{}\"",
+                    normalizedSource, ruleIndex, matched, escapeForLog(pattern.pattern()));
+            if (!matched) continue;
             if (devMode) OrderToCookMod.LOGGER.info(
                     "[ChatOrder/Dev] 正则匹配成功：ruleIndex={}, pattern=\"{}\"", ruleIndex, pattern.pattern());
             String content = namedGroup(matcher, "content");
@@ -147,5 +152,38 @@ public final class ChatOrderClientApi {
 
     private static String truncate(String value, int maxLength) {
         return value.length() <= maxLength ? value : value.substring(0, maxLength);
+    }
+
+    /** 输出不会受日志编码影响的字符串诊断信息，用于定位不可见字符。 */
+    private static void logMessageDiagnostics(String sourceId, String value) {
+        OrderToCookMod.LOGGER.info(
+                "[ChatOrder/Dev] 字符串诊断：source={}, utf16Length={}, codePointCount={}, escaped=\"{}\", codePoints={}",
+                sourceId, value.length(), value.codePointCount(0, value.length()),
+                escapeForLog(value), describeCodePoints(value));
+    }
+
+    /** 将控制字符、格式字符和特殊空格转成 Unicode 转义，防止日志显示时被吞掉。 */
+    private static String escapeForLog(String value) {
+        StringBuilder escaped = new StringBuilder(value.length());
+        value.codePoints().forEach(codePoint -> {
+            if (Character.isISOControl(codePoint)
+                    || Character.getType(codePoint) == Character.FORMAT
+                    || codePoint == 0x00A0 || codePoint == 0x3000) {
+                escaped.append(String.format(codePoint <= 0xFFFF ? "\\u%04X" : "\\U%08X", codePoint));
+            } else {
+                escaped.appendCodePoint(codePoint);
+            }
+        });
+        return escaped.toString();
+    }
+
+    /** 按 Unicode 码点输出完整序列，复制日志后仍可无歧义地比较两条消息。 */
+    private static String describeCodePoints(String value) {
+        StringBuilder result = new StringBuilder();
+        value.codePoints().forEach(codePoint -> {
+            if (!result.isEmpty()) result.append(' ');
+            result.append(String.format(codePoint <= 0xFFFF ? "U+%04X" : "U+%06X", codePoint));
+        });
+        return result.toString();
     }
 }
