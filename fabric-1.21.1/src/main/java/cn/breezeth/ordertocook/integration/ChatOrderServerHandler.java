@@ -25,7 +25,7 @@ public final class ChatOrderServerHandler {
     private ChatOrderServerHandler() {}
 
     public static void handle(ServerPlayerEntity player, String customerName,
-                              boolean deliveryRequested, int menuIndex) {
+                              Boolean deliveryRequested, int menuIndex) {
         boolean devMode = ConfigManager.isDevModeEnabled();
         if (devMode) OrderToCookMod.LOGGER.info(
                 "[ChatOrder/Dev] 服务端收到请求：player=\"{}\", customerName=\"{}\", deliveryRequested={}, menuIndex={}, playerPos={}, dimension={}",
@@ -68,7 +68,7 @@ public final class ChatOrderServerHandler {
                 menuIndex, machinePos.toShortString(), fullMenu.size());
         ItemStack order = OrderGenerator.generateRandomOrder(
                 world, machinePos, machine.getLevel(), orderMenu, normalizedCustomerName,
-                deliveryRequested ? Boolean.TRUE : null);
+                deliveryRequested);
         markAsChatOrder(order);
         int targetSlot = insertOrder(world, machine, order);
         if (targetSlot >= 0) {

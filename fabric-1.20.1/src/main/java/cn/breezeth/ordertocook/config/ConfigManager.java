@@ -285,6 +285,14 @@ public class ConfigManager {
         save();
     }
 
+    public static void setChatOrderEnabled(boolean enabled) {
+        ModConfig cfg = get();
+        if (cfg != null) {
+            cfg.chatOrderEnabled = enabled;
+            save();
+        }
+    }
+
     public static void clearCache() {
         config = null;
         customMenuNutritionMap = null;

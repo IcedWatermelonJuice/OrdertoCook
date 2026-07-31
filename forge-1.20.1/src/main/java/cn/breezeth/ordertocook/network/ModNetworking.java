@@ -125,7 +125,8 @@ public final class ModNetworking {
     public record RiderAnimS2CPayload(UUID playerUuid, int animType, boolean animate) {}
 
     /** Structured client intent; position and menu are resolved by the server. */
-    public record ChatOrderC2SPayload(String customerName, boolean deliveryRequested, int menuIndex) {}
+    /** deliveryRequested: TRUE=外卖, FALSE=堂食/到店, null=未指定（服务端按配置随机）。 */
+    public record ChatOrderC2SPayload(String customerName, Boolean deliveryRequested, int menuIndex) {}
 
     public static void register() {
         registerServer(PrestigeQueryC2SPayload.class, (msg, buf) -> {}, buf -> PrestigeQueryC2SPayload.INSTANCE, (msg, player) -> {
@@ -202,10 +203,11 @@ public final class ModNetworking {
         registerServer(ChatOrderC2SPayload.class,
                 (msg, buf) -> {
                     buf.writeUtf(msg.customerName(), 64);
-                    buf.writeBoolean(msg.deliveryRequested());
+                    buf.writeBoolean(msg.deliveryRequested() != null);
+                    buf.writeBoolean(Boolean.TRUE.equals(msg.deliveryRequested()));
                     buf.writeVarInt(msg.menuIndex());
                 },
-                buf -> new ChatOrderC2SPayload(buf.readUtf(64), buf.readBoolean(), buf.readVarInt()),
+                buf -> new ChatOrderC2SPayload(buf.readUtf(64), buf.readBoolean() ? buf.readBoolean() : null, buf.readVarInt()),
                 (msg, player) -> cn.breezeth.ordertocook.integration.ChatOrderServerHandler.handle(
                         player, msg.customerName(), msg.deliveryRequested(), msg.menuIndex()));
     }

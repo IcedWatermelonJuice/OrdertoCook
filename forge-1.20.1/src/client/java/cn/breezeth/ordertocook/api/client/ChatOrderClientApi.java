@@ -20,6 +20,8 @@ public final class ChatOrderClientApi {
     private static final String ORDER_TRIGGER_KEYWORD = "我来下单了";
     private static final String RANDOM_ORDER_KEYWORD = "随机订单";
     private static final Pattern DELIVERY_KEYWORDS = Pattern.compile("外带|外卖|带走|打包");
+    /** 弹幕信息中出现“堂食”时，强制按到店订单处理，不生成外卖单。 */
+    private static final String DINE_IN_KEYWORD = "堂食";
     private static final Pattern MENU_KEYWORD = Pattern.compile("套餐\\s*(\\d+|[A-Za-z])", Pattern.CASE_INSENSITIVE);
     private static final Map<String, Long> RECENT_FINGERPRINTS = new LinkedHashMap<>();
     private static volatile List<Pattern> messagePatterns = List.of();
@@ -88,7 +90,12 @@ public final class ChatOrderClientApi {
             OrderToCookMod.LOGGER.info(
                     "[ChatOrder] 捕获到关键信息：source={}, 内容=\"{}\"，顾客名=\"{}\"，用户发言=\"{}\"",
                     normalizedSource, rawMessage, customerName.isEmpty() ? "<random>" : customerName, content);
-            boolean deliveryRequested = DELIVERY_KEYWORDS.matcher(content).find();
+            Boolean deliveryRequested;
+            if (rawMessage.contains(DINE_IN_KEYWORD)) {
+                deliveryRequested = Boolean.FALSE;
+            } else {
+                deliveryRequested = DELIVERY_KEYWORDS.matcher(content).find() ? Boolean.TRUE : null;
+            }
             OrderToCookMod.LOGGER.info(
                     "[ChatOrder] 发送结构化请求：customerName=\"{}\", deliveryRequested={}, menuIndex={}",
                     customerName.isEmpty() ? "<random>" : customerName, deliveryRequested, menuIndex);

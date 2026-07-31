@@ -67,7 +67,7 @@ public final class ModNetworking {
     public static void registerServerReceivers() {
         ServerPlayNetworking.registerGlobalReceiver(CHAT_ORDER_C2S, (server, player, handler, buf, responseSender) -> {
             String customerName = buf.readString(64);
-            boolean deliveryRequested = buf.readBoolean();
+            Boolean deliveryRequested = buf.readBoolean() ? buf.readBoolean() : null;
             int menuIndex = buf.readVarInt();
             server.execute(() -> cn.breezeth.ordertocook.integration.ChatOrderServerHandler.handle(
                     player, customerName, deliveryRequested, menuIndex));

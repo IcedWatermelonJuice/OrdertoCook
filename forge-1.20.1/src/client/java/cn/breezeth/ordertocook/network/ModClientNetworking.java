@@ -17,7 +17,7 @@ public final class ModClientNetworking {
     }
 
     /** Sends parsed chat intent; position and menu remain server-authoritative. */
-    public static void sendChatOrder(String customerName, boolean deliveryRequested, int menuIndex) {
+    public static void sendChatOrder(String customerName, Boolean deliveryRequested, int menuIndex) {
         if (Minecraft.getInstance().getConnection() == null) return;
         ModNetworking.sendToServer(new ModNetworking.ChatOrderC2SPayload(
                 customerName, deliveryRequested, menuIndex));

@@ -11,6 +11,7 @@ import cn.breezeth.ordertocook.client.renderer.CustomerEntityRenderer;
 import cn.breezeth.ordertocook.client.renderer.SeatEntityRenderer;
 import cn.breezeth.ordertocook.client.renderer.WashingTableWaterRenderer;
 import cn.breezeth.ordertocook.client.render.feature.HelmetFeatureRenderer;
+import cn.breezeth.ordertocook.config.ConfigManager;
 import cn.breezeth.ordertocook.core.ModConstants;
 import cn.breezeth.ordertocook.core.NpcNames;
 import cn.breezeth.ordertocook.entity.SeatEntity;
@@ -313,9 +314,25 @@ public final class OrderToCookModClient {
 
     private static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
         ArgumentType<Boolean> boolArgument = Objects.requireNonNull(BoolArgumentType.bool());
-        // Merge a unique client-only child into the mod's existing server command root.
-        event.getDispatcher().register(Commands.literal("ordertocook")
-                .then(Commands.literal("danmuku")
+        // 客户端专用命令，根名 /chatorder 与服务端 /ordertocook 区分开，避免覆盖服务端命令补全树。
+        event.getDispatcher().register(Commands.literal("chatorder")
+                .executes(context -> {
+                    context.getSource().sendFailure(Component.literal("用法: /chatorder enable | disable | danmaku <msg>"));
+                    return 0;
+                })
+                .then(Commands.literal("enable")
+                        .executes(context -> {
+                            ConfigManager.setChatOrderEnabled(true);
+                            context.getSource().sendSuccess(() -> Component.literal("弹幕点单已启用，配置已保存"), false);
+                            return 1;
+                        }))
+                .then(Commands.literal("disable")
+                        .executes(context -> {
+                            ConfigManager.setChatOrderEnabled(false);
+                            context.getSource().sendSuccess(() -> Component.literal("弹幕点单已禁用，配置已保存"), false);
+                            return 1;
+                        }))
+                .then(Commands.literal("danmaku")
                         .then(Commands.argument("msg", StringArgumentType.greedyString())
                                 .executes(context -> ChatOrderClientApi.submitMessage(
                                         "client_command", StringArgumentType.getString(context, "msg")) ? 1 : 0))));

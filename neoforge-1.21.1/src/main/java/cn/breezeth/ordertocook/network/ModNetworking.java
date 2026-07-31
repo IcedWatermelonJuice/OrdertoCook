@@ -221,16 +221,18 @@ public final class ModNetworking {
     }
 
     /** Structured client intent; player position and menu are resolved by the server. */
-    public record ChatOrderC2SPayload(String customerName, boolean deliveryRequested, int menuIndex) implements CustomPacketPayload {
+    /** deliveryRequested: TRUE=外卖, FALSE=堂食/到店, null=未指定（服务端按配置随机）。 */
+    public record ChatOrderC2SPayload(String customerName, Boolean deliveryRequested, int menuIndex) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ChatOrderC2SPayload> ID =
                 new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "chat_order_c2s"));
         public static final StreamCodec<FriendlyByteBuf, ChatOrderC2SPayload> CODEC =
                 StreamCodec.ofMember((payload, buf) -> {
                             buf.writeUtf(payload.customerName(), 64);
-                            buf.writeBoolean(payload.deliveryRequested());
+                            buf.writeBoolean(payload.deliveryRequested() != null);
+                            buf.writeBoolean(Boolean.TRUE.equals(payload.deliveryRequested()));
                             buf.writeVarInt(payload.menuIndex());
                         },
-                        buf -> new ChatOrderC2SPayload(buf.readUtf(64), buf.readBoolean(), buf.readVarInt()));
+                        buf -> new ChatOrderC2SPayload(buf.readUtf(64), buf.readBoolean() ? buf.readBoolean() : null, buf.readVarInt()));
 
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
