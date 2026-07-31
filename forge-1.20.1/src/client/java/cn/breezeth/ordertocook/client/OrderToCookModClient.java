@@ -325,13 +325,13 @@ public final class OrderToCookModClient {
                 .then(Commands.literal("enable")
                         .executes(context -> {
                             ConfigManager.setChatOrderEnabled(true);
-                            context.getSource().sendSuccess(Component.literal("弹幕点单已启用，配置已保存"), false);
+                            context.getSource().sendSuccess(() -> Component.literal("弹幕点单已启用，配置已保存"), false);
                             return 1;
                         }))
                 .then(Commands.literal("disable")
                         .executes(context -> {
                             ConfigManager.setChatOrderEnabled(false);
-                            context.getSource().sendSuccess(Component.literal("弹幕点单已禁用，配置已保存"), false);
+                            context.getSource().sendSuccess(() -> Component.literal("弹幕点单已禁用，配置已保存"), false);
                             return 1;
                         }))
                 .then(Commands.literal("danmaku")
