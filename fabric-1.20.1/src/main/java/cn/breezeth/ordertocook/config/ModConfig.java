@@ -122,8 +122,8 @@ public class ModConfig {
 
     @Comment("Chat message patterns are tested from top to bottom. The first full match wins.\nThe 'content' group is required; the 'name' group is optional and an absent name uses a random customer.")
     public List<String> chatOrderRegexPatterns = new ArrayList<>(Arrays.asList(
-            "^\\[消息\\]\\s*(?<name>[^：:\\r\\n]+?)\\s*[：:]\\s*(?<content>.+)$",
-            "^\\[(?<tier>舰|普|房)\\]\\s*<(?<name>[^<>\\r\\n]+?)>\\s+(?<content>.+)$",
+            "^(?:§[0-9A-FK-ORa-fk-orx])*\\[消息\\](?:§[0-9A-FK-ORa-fk-orx])*\\s*(?<name>[^：:\\r\\n]+?)\\s*[：:]\\s*(?<content>.+)$",
+            "^(?:§[0-9A-FK-ORa-fk-orx])*\\[(?<tier>舰|普|房)\\](?:§[0-9A-FK-ORa-fk-orx])*\\s*(?:§[0-9A-FK-ORa-fk-orx])*<(?<name>[^<>\\r\\n]+?)>(?:§[0-9A-FK-ORa-fk-orx])*\\s+(?:§[0-9A-FK-ORa-fk-orx])*(?<content>.+)$",
             "^我来下单了-(?:(?<name>[^-\\r\\n]+?)-)?(?<content>.+)$"
     ));
 
