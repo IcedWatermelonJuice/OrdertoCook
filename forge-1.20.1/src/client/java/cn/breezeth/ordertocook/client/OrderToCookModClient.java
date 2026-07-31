@@ -1,6 +1,7 @@
 package cn.breezeth.ordertocook.client;
 
 import cn.breezeth.ordertocook.block.WashingTableBlock;
+import cn.breezeth.ordertocook.api.client.ChatOrderClientApi;
 import cn.breezeth.ordertocook.client.render.MotorcycleRenderer;
 import cn.breezeth.ordertocook.client.render.model.MotorcycleModel;
 import cn.breezeth.ordertocook.client.animation.RideOrientationLock;
@@ -27,6 +28,7 @@ import cn.breezeth.ordertocook.screen.TakeoutBoxScreen;
 import cn.breezeth.ordertocook.vehicle.motorcycle.MotorcycleEntity;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -64,6 +66,7 @@ import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 
 import net.minecraftforge.client.event.RenderGuiEvent;
+import cn.breezeth.ordertocook.integration.ChatOrderClientIntegration;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import org.lwjgl.glfw.GLFW;
 
@@ -92,6 +95,7 @@ public final class OrderToCookModClient {
         event.enqueueWork(() -> {
             RideOrientationLock.register();
             RidePerspectiveSwitch.register();
+            ChatOrderClientIntegration.register();
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.FOOD_PLATE_DISPLAY.get(), RenderType.cutout());
             registerScreens();
             MinecraftForge.EVENT_BUS.addListener(OrderToCookModClient::onClientTickPre);
@@ -311,6 +315,12 @@ public final class OrderToCookModClient {
 
     private static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
         ArgumentType<Boolean> boolArgument = Objects.requireNonNull(BoolArgumentType.bool());
+        // Merge a unique client-only child into the mod's existing server command root.
+        event.getDispatcher().register(Commands.literal("ordertocook")
+                .then(Commands.literal("danmuku")
+                        .then(Commands.argument("msg", StringArgumentType.greedyString())
+                                .executes(context -> ChatOrderClientApi.submitMessage(
+                                        "client_command", StringArgumentType.getString(context, "msg")) ? 1 : 0))));
         event.getDispatcher().register(Commands.literal("otcclient")
                 .then(Commands.literal("uicontrol")
                         .then(Commands.argument("enabled", boolArgument)

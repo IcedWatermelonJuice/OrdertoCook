@@ -220,8 +220,30 @@ public final class ModNetworking {
         }
     }
 
+    /** Structured client intent; player position and menu are resolved by the server. */
+    public record ChatOrderC2SPayload(String customerName, boolean deliveryRequested, int menuIndex) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<ChatOrderC2SPayload> ID =
+                new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "chat_order_c2s"));
+        public static final StreamCodec<FriendlyByteBuf, ChatOrderC2SPayload> CODEC =
+                StreamCodec.ofMember((payload, buf) -> {
+                            buf.writeUtf(payload.customerName(), 64);
+                            buf.writeBoolean(payload.deliveryRequested());
+                            buf.writeVarInt(payload.menuIndex());
+                        },
+                        buf -> new ChatOrderC2SPayload(buf.readUtf(64), buf.readBoolean(), buf.readVarInt()));
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return ID;
+        }
+    }
+
     public static void registerPayloadHandlers(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar("1");
+        registrar.playToServer(ChatOrderC2SPayload.ID, ChatOrderC2SPayload.CODEC, (payload, context) ->
+                cn.breezeth.ordertocook.integration.ChatOrderServerHandler.handle(
+                        (ServerPlayer) context.player(), payload.customerName(),
+                        payload.deliveryRequested(), payload.menuIndex()));
         registrar.playToServer(PrestigeQueryC2SPayload.ID, PrestigeQueryC2SPayload.CODEC, (payload, context) -> {
             ServerPlayer player = (ServerPlayer) context.player();
             int prestige = PrestigeManager.getPlayerPrestige(player);

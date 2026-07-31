@@ -121,7 +121,24 @@ public class ConfigManager {
             }
         }
 
+        if (cfg.chatOrderRegexPatterns == null) {
+            cfg.chatOrderRegexPatterns = defaults.chatOrderRegexPatterns;
+            changed = true;
+        } else {
+            changed |= migrateLegacyChatOrderFallback(cfg.chatOrderRegexPatterns);
+        }
+
         return changed;
+    }
+
+    /** Replaces only the previous built-in fallback; user-defined expressions remain untouched. */
+    private static boolean migrateLegacyChatOrderFallback(List<String> patterns) {
+        String legacy = "^我来下单了-(?<name>.+)$";
+        String replacement = "^我来下单了-(?:(?<name>[^-\\r\\n]+?)-)?(?<content>.+)$";
+        int index = patterns.indexOf(legacy);
+        if (index < 0) return false;
+        patterns.set(index, replacement);
+        return true;
     }
 
     private static <T> T loadConfig(File file, Class<T> type, T defaultInstance) {
@@ -152,6 +169,14 @@ public class ConfigManager {
         changed |= addMissingConfigKey(json, "vanillaEraFaresChronCompat", new JsonPrimitive(false));
         changed |= addMissingConfigKey(json, "sdmShopCurrencyCompat", new JsonPrimitive(false));
         changed |= addMissingConfigKey(json, "sdmShopCurrencyKey", new JsonPrimitive("basic_money"));
+        changed |= addMissingConfigKey(json, "chatOrderEnabled", new JsonPrimitive(false));
+        changed |= addMissingConfigKey(json, "chatOrderCaptureNativeMessages", new JsonPrimitive(true));
+        changed |= addMissingConfigKey(json, "chatOrderCaptureChatHud", new JsonPrimitive(true));
+        JsonArray chatPatterns = new JsonArray();
+        for (String pattern : new ModConfig().chatOrderRegexPatterns) {
+            chatPatterns.add(new JsonPrimitive(pattern));
+        }
+        changed |= addMissingConfigKey(json, "chatOrderRegexPatterns", chatPatterns);
         return changed;
     }
 
@@ -196,12 +221,37 @@ public class ConfigManager {
     private static <T> void saveConfig(File file, T instance) {
         try (FileOutputStream out = new FileOutputStream(file)) {
             String result = JANKSON.toJson(instance).toJson(true, true);
+            result = restoreReadableUnicode(result);
             result = compactNumericArrays(result);
             result = normalizeToLineComments(result);
-            out.write(result.getBytes());
+            out.write(result.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             OrderToCookMod.LOGGER.error("Failed to save config " + file.getName(), e);
         }
+    }
+
+    /** Jankson escapes non-ASCII by default; config files stay UTF-8 and human-readable. */
+    private static String restoreReadableUnicode(String json) {
+        StringBuilder readable = new StringBuilder(json.length());
+        for (int i = 0; i < json.length(); i++) {
+            if (json.charAt(i) == '\\' && i + 5 < json.length() && json.charAt(i + 1) == 'u') {
+                int precedingSlashes = 0;
+                for (int cursor = i - 1; cursor >= 0 && json.charAt(cursor) == '\\'; cursor--) precedingSlashes++;
+                if ((precedingSlashes & 1) == 0) {
+                    try {
+                        char decoded = (char) Integer.parseInt(json.substring(i + 2, i + 6), 16);
+                        if (!Character.isISOControl(decoded) && !Character.isSurrogate(decoded)) {
+                            readable.append(decoded);
+                            i += 5;
+                            continue;
+                        }
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
+            readable.append(json.charAt(i));
+        }
+        return readable.toString();
     }
 
     public static void save() {
@@ -385,7 +435,8 @@ public class ConfigManager {
         root.put("items", arr);
         try (FileOutputStream out = new FileOutputStream(file)) {
             String result = root.toJson(true, true);
-            out.write(result.getBytes());
+            result = restoreReadableUnicode(result);
+            out.write(result.getBytes(StandardCharsets.UTF_8));
             activeCustomMenuFileLastModified = file.lastModified();
         } catch (IOException e) {
             OrderToCookMod.LOGGER.error("Failed to save custom menu items config {}", file.getName(), e);

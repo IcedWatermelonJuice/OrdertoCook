@@ -11,6 +11,7 @@
 		"ItemEntityMixin"
 	],
 	"client": [
+		"client.ChatComponentMixin",
 		"client.vehicle.CameraMixin",
 		"client.compat.touhoulittlemaid.EntityChairGetYawMixin",
 		"client.vehicle.ArmorFeatureRendererMixin",

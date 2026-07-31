@@ -34,6 +34,7 @@ public final class ModNetworking {
     private static final Identifier RIDER_SOUND_C2S = new Identifier(cn.breezeth.ordertocook.core.ModConstants.MOD_ID, "rider_sound_c2s");
     private static final Identifier RIDER_ANIM_C2S = new Identifier(cn.breezeth.ordertocook.core.ModConstants.MOD_ID, "rider_anim_c2s");
     private static final Identifier RIDER_ANIM_S2C = new Identifier(cn.breezeth.ordertocook.core.ModConstants.MOD_ID, "rider_anim_s2c");
+    private static final Identifier CHAT_ORDER_C2S = new Identifier(cn.breezeth.ordertocook.core.ModConstants.MOD_ID, "chat_order_c2s");
     public static final int RIDER_SOUND_HORN = 1;
     public static final int RIDER_SOUND_CHAIR_AMBIENT = 2;
     public static final int RIDER_SOUND_CHAIR_TRADE = 3;
@@ -64,6 +65,13 @@ public final class ModNetworking {
     }
 
     public static void registerServerReceivers() {
+        ServerPlayNetworking.registerGlobalReceiver(CHAT_ORDER_C2S, (server, player, handler, buf, responseSender) -> {
+            String customerName = buf.readString(64);
+            boolean deliveryRequested = buf.readBoolean();
+            int menuIndex = buf.readVarInt();
+            server.execute(() -> cn.breezeth.ordertocook.integration.ChatOrderServerHandler.handle(
+                    player, customerName, deliveryRequested, menuIndex));
+        });
         ServerPlayNetworking.registerGlobalReceiver(PRESTIGE_QUERY_C2S, (server, player, handler, buf, responseSender) -> {
             int prestige = PrestigeManager.getPlayerPrestige(player);
             PacketByteBuf out = new PacketByteBuf(Unpooled.buffer());

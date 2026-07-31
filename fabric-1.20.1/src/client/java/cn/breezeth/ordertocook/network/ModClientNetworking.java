@@ -68,6 +68,17 @@ public final class ModClientNetworking {
         });
     }
 
+    /** Sends parsed chat intent; position and menu remain server-authoritative. */
+    public static void sendChatOrder(String customerName, boolean deliveryRequested, int menuIndex) {
+        if (MinecraftClient.getInstance().getNetworkHandler() == null) return;
+        Identifier id = new Identifier(cn.breezeth.ordertocook.core.ModConstants.MOD_ID, "chat_order_c2s");
+        PacketByteBuf out = new PacketByteBuf(Unpooled.buffer());
+        out.writeString(customerName, 64);
+        out.writeBoolean(deliveryRequested);
+        out.writeVarInt(menuIndex);
+        ClientPlayNetworking.send(id, out);
+    }
+
     public static boolean sendPrestigeQuery() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.getNetworkHandler() == null) return false;

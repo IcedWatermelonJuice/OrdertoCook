@@ -111,6 +111,22 @@ public class ModConfig {
     @Comment("SDM Economy currency key used when SDMShop currency compatibility is enabled.")
     public String sdmShopCurrencyKey = "basic_money";
 
+    @Comment("========== Chat Order Integration ==========\nEnable local client messages containing '我来下单了' to request server-side orders. Disabled by default.")
+    public boolean chatOrderEnabled = false;
+
+    @Comment("Capture messages delivered through the loader's native client chat events.")
+    public boolean chatOrderCaptureNativeMessages = true;
+
+    @Comment("Capture messages added directly to Minecraft's chat HUD. Fingerprint deduplication prevents native-event duplicates.")
+    public boolean chatOrderCaptureChatHud = true;
+
+    @Comment("Chat message patterns are tested from top to bottom. The first full match wins.\nThe 'content' group is required; the 'name' group is optional and an absent name uses a random customer.")
+    public List<String> chatOrderRegexPatterns = new ArrayList<>(Arrays.asList(
+            "^\\[消息\\]\\s*(?<name>[^：:\\r\\n]+?)\\s*[：:]\\s*(?<content>.+)$",
+            "^\\[(?<tier>舰|普|房)\\]\\s*<(?<name>[^<>\\r\\n]+?)>\\s+(?<content>.+)$",
+            "^我来下单了-(?:(?<name>[^-\\r\\n]+?)-)?(?<content>.+)$"
+    ));
+
     /*
      * ========== Food Filtering (Removed) ==========
      * Previous versions provided blacklist/whitelist to filter foods from the "all item pool" for orders.

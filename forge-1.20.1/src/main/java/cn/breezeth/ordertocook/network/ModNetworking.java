@@ -124,6 +124,9 @@ public final class ModNetworking {
 
     public record RiderAnimS2CPayload(UUID playerUuid, int animType, boolean animate) {}
 
+    /** Structured client intent; position and menu are resolved by the server. */
+    public record ChatOrderC2SPayload(String customerName, boolean deliveryRequested, int menuIndex) {}
+
     public static void register() {
         registerServer(PrestigeQueryC2SPayload.class, (msg, buf) -> {}, buf -> PrestigeQueryC2SPayload.INSTANCE, (msg, player) -> {
             int prestige = PrestigeManager.getPlayerPrestige(player);
@@ -195,6 +198,16 @@ public final class ModNetworking {
                 buf -> new RiderAnimC2SPayload(buf.readVarInt(), buf.readBoolean()), ModNetworking::handleRiderAnim);
         registerClient(RiderAnimS2CPayload.class, (msg, buf) -> { buf.writeUUID(msg.playerUuid()); buf.writeVarInt(msg.animType()); buf.writeBoolean(msg.animate()); },
                 buf -> new RiderAnimS2CPayload(buf.readUUID(), buf.readVarInt(), buf.readBoolean()), ModNetworkingClientBridge::handleRiderAnim);
+        // Append new packets so the numeric IDs of all existing packets remain stable.
+        registerServer(ChatOrderC2SPayload.class,
+                (msg, buf) -> {
+                    buf.writeUtf(msg.customerName(), 64);
+                    buf.writeBoolean(msg.deliveryRequested());
+                    buf.writeVarInt(msg.menuIndex());
+                },
+                buf -> new ChatOrderC2SPayload(buf.readUtf(64), buf.readBoolean(), buf.readVarInt()),
+                (msg, player) -> cn.breezeth.ordertocook.integration.ChatOrderServerHandler.handle(
+                        player, msg.customerName(), msg.deliveryRequested(), msg.menuIndex()));
     }
 
     public static void sendToServer(Object payload) {

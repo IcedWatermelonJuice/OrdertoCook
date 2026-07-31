@@ -80,6 +80,15 @@ public class OrderGenerator {
     }
 
     public static ItemStack generateRandomOrder(ServerLevel world, BlockPos pos, int level, List<Item> menuFoods) {
+        return generateRandomOrder(world, pos, level, menuFoods, null, null);
+    }
+
+    /**
+     * Backward-compatible order generator with optional chat-order overrides.
+     * A null delivery override preserves the original configured random chance.
+     */
+    public static ItemStack generateRandomOrder(ServerLevel world, BlockPos pos, int level, List<Item> menuFoods,
+                                                String customerName, Boolean deliveryOverride) {
         ItemStack order = new ItemStack(ModItems.ORDER.get());
         CompoundTag nbt = new CompoundTag();
         ModConfig config = ConfigManager.get();
@@ -87,7 +96,9 @@ public class OrderGenerator {
         // 订单类型（按权重随机）
         int type = determineOrderType(world.random, config, level);
 
-        boolean delivery = world.random.nextDouble() < config.deliveryRate;
+        boolean delivery = deliveryOverride != null
+                ? deliveryOverride
+                : world.random.nextDouble() < config.deliveryRate;
         boolean urgent = world.random.nextDouble() < Math.min(1.0, config.urgentRate + urgentBonus(level));
 
         long nowTick = world.getGameTime();
@@ -107,7 +118,9 @@ public class OrderGenerator {
         // 奖励计算（类型/加急/外卖与长距离倍率）
         int totalCoin = calculatePrestige(nbt, type, urgent, delivery, isLongDistance, level);
 
-        CustomerProfileLibrary.CustomerProfile profile = CustomerProfileLibrary.createOrderProfile(world);
+        CustomerProfileLibrary.CustomerProfile profile = customerName == null || customerName.isBlank()
+                ? CustomerProfileLibrary.createOrderProfile(world)
+                : CustomerProfileLibrary.createWalkInProfile(world, customerName.trim());
         String customer = profile.displayName();
         nbt.putString(ModConstants.NBT_ORDER_ID, OtcRuntimeIdState.get(world).allocateOrderId());
         nbt.putString(ModConstants.NBT_CUSTOMER_NAME, customer);

@@ -49,6 +49,12 @@ public final class ModClientNetworking {
                 context.client().execute(() -> applyRemoteRiderAnimation(context.client(), payload.playerUuid(), payload.animType(), payload.animate())));
     }
 
+    /** Sends parsed chat intent; position and menu remain server-authoritative. */
+    public static void sendChatOrder(String customerName, boolean deliveryRequested, int menuIndex) {
+        if (net.minecraft.client.MinecraftClient.getInstance().getNetworkHandler() == null) return;
+        ClientPlayNetworking.send(new ModNetworking.ChatOrderC2SPayload(customerName, deliveryRequested, menuIndex));
+    }
+
     public static boolean sendPrestigeQuery() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.getNetworkHandler() == null) return false;

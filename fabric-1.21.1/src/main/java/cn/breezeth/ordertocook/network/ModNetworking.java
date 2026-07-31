@@ -218,6 +218,24 @@ public final class ModNetworking {
         }
     }
 
+    /** Structured client intent; player position and menu data are deliberately omitted. */
+    public record ChatOrderC2SPayload(String customerName, boolean deliveryRequested, int menuIndex) implements CustomPayload {
+        public static final CustomPayload.Id<ChatOrderC2SPayload> ID =
+                new CustomPayload.Id<>(Identifier.of(ModConstants.MOD_ID, "chat_order_c2s"));
+        public static final PacketCodec<PacketByteBuf, ChatOrderC2SPayload> CODEC =
+                PacketCodec.of((payload, buf) -> {
+                            buf.writeString(payload.customerName(), 64);
+                            buf.writeBoolean(payload.deliveryRequested());
+                            buf.writeVarInt(payload.menuIndex());
+                        },
+                        buf -> new ChatOrderC2SPayload(buf.readString(64), buf.readBoolean(), buf.readVarInt()));
+
+        @Override
+        public CustomPayload.Id<? extends CustomPayload> getId() {
+            return ID;
+        }
+    }
+
     public static void registerPayloadTypes() {
         PayloadTypeRegistry.playC2S().register(PrestigeQueryC2SPayload.ID, PrestigeQueryC2SPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(PrestigeQueryS2CPayload.ID, PrestigeQueryS2CPayload.CODEC);
@@ -233,9 +251,13 @@ public final class ModNetworking {
         PayloadTypeRegistry.playC2S().register(RiderSoundPayload.ID, RiderSoundPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(RiderAnimC2SPayload.ID, RiderAnimC2SPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(RiderAnimS2CPayload.ID, RiderAnimS2CPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(ChatOrderC2SPayload.ID, ChatOrderC2SPayload.CODEC);
     }
 
     public static void registerServerReceivers() {
+        ServerPlayNetworking.registerGlobalReceiver(ChatOrderC2SPayload.ID, (payload, context) ->
+                cn.breezeth.ordertocook.integration.ChatOrderServerHandler.handle(
+                        context.player(), payload.customerName(), payload.deliveryRequested(), payload.menuIndex()));
         ServerPlayNetworking.registerGlobalReceiver(PrestigeQueryC2SPayload.ID, (payload, context) -> {
             int prestige = PrestigeManager.getPlayerPrestige(context.player());
             ServerPlayNetworking.send(context.player(), new PrestigeQueryS2CPayload(prestige));

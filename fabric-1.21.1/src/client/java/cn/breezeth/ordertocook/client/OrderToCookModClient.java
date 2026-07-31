@@ -29,6 +29,7 @@ import cn.breezeth.ordertocook.screen.BoardScreen;
 import cn.breezeth.ordertocook.command.ModClientCommands;
 import cn.breezeth.ordertocook.network.ModClientNetworking;
 import cn.breezeth.ordertocook.client.renderer.CustomerEntityRenderer;
+import cn.breezeth.ordertocook.integration.ChatOrderClientIntegration;
 
 public class OrderToCookModClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(ModConstants.MOD_ID);
@@ -51,6 +52,7 @@ public class OrderToCookModClient implements ClientModInitializer {
         HandledScreens.register(ModScreenHandlers.COUNTERTOP_SCREEN_HANDLER, TakeoutBoxScreen::new);
         HandledScreens.register(ModScreenHandlers.BOARD_SCREEN_HANDLER, BoardScreen::new);
         ModClientNetworking.registerClientReceivers();
+        ChatOrderClientIntegration.register();
         ModClientCommands.register();
         new OrderToCookClient().onInitializeClient();
 
